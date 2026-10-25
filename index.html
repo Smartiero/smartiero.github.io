@@ -99,7 +99,7 @@ dialog input{width:100%;padding:11px;border:1px solid var(--bordo);border-radius
       <button class="chip c-scadenza" data-cat="Scadenza" aria-pressed="false">Scadenza</button>
       <button class="chip c-nota" data-cat="Nota" aria-pressed="false">Nota</button>
     </div>
-    <div class="scad" id="scadBox"><label class="tog">Data scadenza <input type="date" id="scadenza"></label></div>
+    <div class="scad" id="scadBox" style="flex-direction:column;gap:10px;align-items:stretch"><label class="tog">Data scadenza <input type="date" id="scadenza"></label><label class="tog" style="flex-direction:column;align-items:stretch;gap:4px">Invita anche (facoltativo)<input type="email" id="invitaAnche" multiple placeholder="es. impresa@esempio.it, altro@esempio.it"></label></div>
     <div class="dict">
       <textarea id="testo" placeholder="Premi il microfono e parla, oppure scrivi…"></textarea>
       <button class="mic" id="mic" aria-label="Detta">🎙</button>
@@ -136,6 +136,7 @@ dialog input{width:100%;padding:11px;border:1px solid var(--bordo);border-radius
   <label>Indirizzo del motore (URL web app)<input id="impUrl" placeholder="https://script.google.com/macros/s/…/exec"></label>
   <label>Codice di accesso<input id="impTok" autocomplete="off"></label>
   <label>Il tuo nome (chi registra)<input id="impAut" placeholder="es. Luca – DL"></label>
+  <label>Invia le scadenze a (email, facoltativo)<input id="impInv" type="email" multiple placeholder="la tua mail per ricevere gli inviti"></label>
   <div class="drow"><button class="btn" id="impAnn">Annulla</button><button class="btn" style="background:var(--verde);color:#fff;border-color:var(--verde)" id="impOk">Salva e prova</button></div>
 </dialog>
 
@@ -155,7 +156,7 @@ const store = {
   get(k, d=""){ try { return localStorage.getItem("sm_"+k) ?? d; } catch { return d; } },
   set(k, v){ try { localStorage.setItem("sm_"+k, v); } catch {} }
 };
-const cfg = { get url(){return store.get("url")}, get token(){return store.get("token")}, get autore(){return store.get("autore")} };
+const cfg = { get url(){return store.get("url")}, get token(){return store.get("token")}, get autore(){return store.get("autore")}, get invitati(){return store.get("invitati")} };
 
 /* ---------- IndexedDB: coda offline e file condivisi ---------- */
 function idb(){ return new Promise((res, rej) => {
@@ -304,8 +305,10 @@ $("#invia").onclick = async () => {
   const testo = $("#testo").value.trim(), commessa = $("#commessa").value;
   if (!commessa) return toast("Scegli o crea una commessa");
   if (!testo && !allegati.length) return toast("Detta o scrivi qualcosa, oppure allega una foto");
+  if (categoria === "Scadenza" && !$("#scadenza").value) return toast("Indica la data della scadenza");
   $("#invia").disabled = true;
   const voce = {commessa, categoria, testo, scadenza: categoria === "Scadenza" ? $("#scadenza").value : "", autore: cfg.autore,
+    invitati: categoria === "Scadenza" ? [cfg.invitati, $("#invitaAnche").value].filter(Boolean).join(",") : "",
     quando: new Date().toISOString(), pos: await posizione(), files: allegati.map(({name, mime, data}) => ({name, mime, data}))};
   try { await api("voce", {}, voce); toast("Registrato ✓"); pulisci(); caricaVoci(); }
   catch (e) {
@@ -313,7 +316,7 @@ $("#invia").onclick = async () => {
     else { await idbPut("coda", {voce}); pulisci(); toast("Nessuna connessione: salvato, lo invio appena torna la rete"); aggiornaCoda(); }
   } finally { $("#invia").disabled = false; }
 };
-function pulisci(){ rec = null; $("#testo").value = ""; base = ""; frase = ""; allegati = []; disegnaThumbs(); $("#scadenza").value = ""; }
+function pulisci(){ rec = null; $("#testo").value = ""; base = ""; frase = ""; allegati = []; disegnaThumbs(); $("#scadenza").value = ""; $("#invitaAnche").value = ""; }
 async function aggiornaCoda(){ const c = await idbAll("coda"); const q = $("#queue"); q.classList.toggle("show", c.length > 0); q.textContent = c.length ? `⏳ ${c.length} ${c.length === 1 ? "voce in attesa" : "voci in attesa"} di invio` : ""; }
 let svuotando = false;
 async function svuotaCoda(){
@@ -344,11 +347,11 @@ $("#btnGio").onclick = async () => {
 };
 
 /* ---------- impostazioni ---------- */
-function apriImp(){ $("#impUrl").value = cfg.url; $("#impTok").value = cfg.token; $("#impAut").value = cfg.autore; $("#dlgImp").showModal(); }
+function apriImp(){ $("#impUrl").value = cfg.url; $("#impTok").value = cfg.token; $("#impAut").value = cfg.autore; $("#impInv").value = cfg.invitati; $("#dlgImp").showModal(); }
 $("#btnImp").onclick = apriImp;
 $("#impAnn").onclick = () => $("#dlgImp").close();
 $("#impOk").onclick = async () => {
-  store.set("url", $("#impUrl").value.trim()); store.set("token", $("#impTok").value.trim()); store.set("autore", $("#impAut").value.trim());
+  store.set("url", $("#impUrl").value.trim()); store.set("token", $("#impTok").value.trim()); store.set("autore", $("#impAut").value.trim()); store.set("invitati", $("#impInv").value.trim());
   try { await api("ping"); $("#dlgImp").close(); toast("Collegato al motore ✓"); caricaCommesse(); svuotaCoda(); }
   catch (e) { toast("Collegamento non riuscito: " + e.message, 5000); }
 };
