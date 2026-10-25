@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Smartiero</title>
+<meta name="theme-color" content="#2f6b4f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --verde:#2f6b4f; --verde2:#6fbf8a; --verdechiaro:#e3f2e7;
+  --giallo:#f2d64b; --giallino:#fbf3c4;
+  --celeste:#7cc3e6; --celestino:#e2f2fa;
+  --grigio:#5f6b67; --grigiochiaro:#eef1f0; --bordo:#d5dcd9;
+  --testo:#1e2a26; --bg:#f6f8f7; --card:#ffffff;
+}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--testo);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px}
+body{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+header{background:var(--verde);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 14px;position:sticky;top:0;z-index:5}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.01em}
+.logo img{width:32px;height:32px;border-radius:8px}
+.iconbtn{background:rgba(255,255,255,.14);border:0;color:#fff;width:40px;height:40px;border-radius:10px;font-size:20px}
+.sel{display:flex;gap:8px;margin-top:12px}
+select,input,textarea{font:inherit;color:var(--testo)}
+.sel select{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:0;background:#fff}
+.sel button{border:0;border-radius:10px;padding:0 14px;background:var(--verde2);color:var(--testo);font-weight:700}
+main{padding:16px;max-width:640px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+html,body{overflow-x:hidden}
+.card{background:var(--card);border:1px solid var(--bordo);border-radius:16px;padding:16px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--grigio);margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid transparent;border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px;background:var(--grigiochiaro);color:var(--testo)}
+.chip[aria-pressed=true]{border-color:var(--testo)}
+.c-giornale{background:var(--verdechiaro)} .c-criticita{background:var(--giallo)} .c-materiali{background:var(--celestino)}
+.c-ordine{background:#cfe9d7} .c-scadenza{background:var(--giallino)} .c-nota{background:var(--grigiochiaro)}
+.dict{display:flex;gap:12px;align-items:flex-start;margin-top:14px}
+textarea{flex:1;min-width:0;min-height:130px;border:1px solid var(--bordo);border-radius:12px;padding:12px;resize:vertical;background:#fff;font-size:17px;line-height:1.4}
+.mic{flex:none;width:76px;height:76px;border-radius:50%;border:0;background:var(--verde);color:#fff;font-size:32px;box-shadow:0 4px 14px rgba(47,107,79,.35)}
+.mic.on{background:#c0392b;animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.5)}70%{box-shadow:0 0 0 16px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
+.hint{font-size:13px;color:var(--grigio);margin-top:6px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.btn{border:1px solid var(--bordo);background:#fff;border-radius:12px;padding:11px 14px;font-weight:600;font-size:15px;color:var(--testo)}
+.btn.primary{background:var(--verde);border-color:var(--verde);color:#fff;width:100%;padding:15px;font-size:17px;margin-top:16px}
+.btn:disabled{opacity:.5}
+label.tog{display:flex;align-items:center;gap:8px;font-size:15px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;background:var(--celestino);display:flex;align-items:center;justify-content:center;font-size:12px;text-align:center;padding:4px}
+.thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.thumb button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:22px;padding:0;z-index:2}
+.scad{display:none;margin-top:12px} .scad.show{display:flex}
+.scad input,.gio input{padding:10px;border:1px solid var(--bordo);border-radius:10px;background:#fff}
+.list{display:grid;gap:10px}
+.voce{border:1px solid var(--bordo);border-radius:12px;padding:12px}
+.voce .meta{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--grigio);margin-bottom:6px;flex-wrap:wrap}
+.tag{border-radius:999px;padding:2px 10px;font-weight:600;color:var(--testo)}
+.voce p{white-space:pre-wrap;line-height:1.4}
+.empty{color:var(--grigio);font-size:15px}
+.queue{background:var(--giallino);border-radius:12px;padding:10px 14px;font-size:14px;display:none}
+.queue.show{display:block}
+.gio{display:flex;gap:10px;flex-wrap:wrap}
+.gio input{flex:1;min-width:0}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));background:var(--testo);color:#fff;padding:14px 16px;border-radius:12px;font-size:15px;transform:translateY(150%);transition:transform .25s;z-index:20;max-width:600px;margin:0 auto}
+.toast.show{transform:none}
+dialog{border:0;border-radius:16px;padding:20px;width:min(520px,calc(100% - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin-bottom:12px}
+dialog label{display:block;font-size:14px;color:var(--grigio);margin-top:12px}
+dialog input{width:100%;padding:11px;border:1px solid var(--bordo);border-radius:10px;margin-top:4px}
+.drow{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="logo"><img src="icon-192.png" alt="">Smartiero</div>
+    <button class="iconbtn" id="btnImp" aria-label="Impostazioni">⚙︎</button>
+  </div>
+  <div class="sel">
+    <select id="commessa" aria-label="Commessa"><option value="">Caricamento commesse…</option></select>
+    <button id="btnNuova" aria-label="Nuova commessa">+ Nuova</button>
+  </div>
+</header>
+
+<main>
+  <div class="queue" id="queue"></div>
+
+  <section class="card">
+    <h2>Nuova voce</h2>
+    <div class="chips" id="chips">
+      <button class="chip c-giornale" data-cat="Giornale lavori" aria-pressed="true">Giornale lavori</button>
+      <button class="chip c-criticita" data-cat="Criticità" aria-pressed="false">Criticità</button>
+      <button class="chip c-materiali" data-cat="Materiali" aria-pressed="false">Materiali</button>
+      <button class="chip c-ordine" data-cat="Ordine all'impresa" aria-pressed="false">Ordine all'impresa</button>
+      <button class="chip c-scadenza" data-cat="Scadenza" aria-pressed="false">Scadenza</button>
+      <button class="chip c-nota" data-cat="Nota" aria-pressed="false">Nota</button>
+    </div>
+    <div class="scad" id="scadBox"><label class="tog">Data scadenza <input type="date" id="scadenza"></label></div>
+    <div class="dict">
+      <textarea id="testo" placeholder="Premi il microfono e parla, oppure scrivi…"></textarea>
+      <button class="mic" id="mic" aria-label="Detta">🎙</button>
+    </div>
+    <div class="hint" id="micHint"></div>
+    <div class="row">
+      <label class="btn">📷 Scatta<input type="file" id="fotoCam" accept="image/*" capture="environment" hidden></label>
+      <label class="btn">🖼 Allega<input type="file" id="fotoGal" accept="image/*,audio/*,application/pdf" multiple hidden></label>
+      <label class="tog"><input type="checkbox" id="gps"> Posizione</label>
+    </div>
+    <div class="thumbs" id="thumbs"></div>
+    <button class="btn primary" id="invia">Registra</button>
+  </section>
+
+  <section class="card">
+    <h2>Giornale dei lavori</h2>
+    <div class="gio">
+      <input type="date" id="dataGio" aria-label="Data giornale">
+      <button class="btn" id="btnGio">Genera documento</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Ultime voci</h2>
+    <div class="list" id="lista"><p class="empty">Nessuna voce.</p></div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<dialog id="dlgImp">
+  <h3>Impostazioni</h3>
+  <p class="hint">Incolla l'indirizzo del motore Google e il codice di accesso che trovi nella guida.</p>
+  <label>Indirizzo del motore (URL web app)<input id="impUrl" placeholder="https://script.google.com/macros/s/…/exec"></label>
+  <label>Codice di accesso<input id="impTok" autocomplete="off"></label>
+  <label>Il tuo nome (chi registra)<input id="impAut" placeholder="es. Luca – DL"></label>
+  <div class="drow"><button class="btn" id="impAnn">Annulla</button><button class="btn" style="background:var(--verde);color:#fff;border-color:var(--verde)" id="impOk">Salva e prova</button></div>
+</dialog>
+
+<dialog id="dlgNuova">
+  <h3>Nuova commessa</h3>
+  <label>Nome della commessa<input id="nuovaNome" placeholder="es. Ristrutturazione Via Roma 12"></label>
+  <div class="drow"><button class="btn" id="nuovaAnn">Annulla</button><button class="btn" style="background:var(--verde);color:#fff;border-color:var(--verde)" id="nuovaOk">Crea</button></div>
+</dialog>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const CAT_CLASS = {"Giornale lavori":"c-giornale","Criticità":"c-criticita","Materiali":"c-materiali","Ordine all'impresa":"c-ordine","Scadenza":"c-scadenza","Nota":"c-nota"};
+
+/* ---------- impostazioni (memorizzate solo su questo telefono) ---------- */
+const store = {
+  get(k, d=""){ try { return localStorage.getItem("sm_"+k) ?? d; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem("sm_"+k, v); } catch {} }
+};
+const cfg = { get url(){return store.get("url")}, get token(){return store.get("token")}, get autore(){return store.get("autore")} };
+
+/* ---------- IndexedDB: coda offline e file condivisi ---------- */
+function idb(){ return new Promise((res, rej) => {
+  const r = indexedDB.open("smartiero", 1);
+  r.onupgradeneeded = () => { const db = r.result;
+    if (!db.objectStoreNames.contains("coda")) db.createObjectStore("coda", {keyPath:"qid", autoIncrement:true});
+    if (!db.objectStoreNames.contains("condivisi")) db.createObjectStore("condivisi", {keyPath:"id", autoIncrement:true});
+  };
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});}
+async function idbAll(name){ const db = await idb(); return new Promise((res, rej) => { const q = db.transaction(name).objectStore(name).getAll(); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+async function idbPut(name, v){ const db = await idb(); return new Promise((res, rej) => { const t = db.transaction(name,"readwrite"); t.objectStore(name).put(v); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+async function idbDel(name, k){ const db = await idb(); return new Promise((res, rej) => { const t = db.transaction(name,"readwrite"); t.objectStore(name).delete(k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+async function idbClear(name){ const db = await idb(); return new Promise((res, rej) => { const t = db.transaction(name,"readwrite"); t.objectStore(name).clear(); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+
+/* ---------- comunicazione col motore Google ---------- */
+async function api(action, params = {}, body = null){
+  if (!cfg.url) throw new Error("Configura prima l'indirizzo del motore (⚙︎)");
+  const u = new URL(cfg.url);
+  u.searchParams.set("action", action);
+  u.searchParams.set("token", cfg.token);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  const opt = body ? {method:"POST", body: JSON.stringify({action, ...body}), headers:{"Content-Type":"text/plain;charset=utf-8"}} : {};
+  const r = await fetch(u, opt);
+  let j; try { j = await r.json(); } catch { throw new Error("Risposta non valida dal motore"); }
+  if (!j.ok) throw new Error(j.error || "Errore del motore");
+  return j;
+}
+
+function toast(msg, ms = 2800){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), ms); }
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const oggi = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+
+/* ---------- commesse ---------- */
+async function caricaCommesse(){
+  const sel = $("#commessa");
+  if (!cfg.url){ sel.innerHTML = '<option value="">Configura il motore (⚙︎)</option>'; return; }
+  try {
+    const j = await api("commesse");
+    store.set("commesseCache", JSON.stringify(j.commesse));
+    riempiCommesse(j.commesse);
+  } catch (e) {
+    let c = []; try { c = JSON.parse(store.get("commesseCache","[]")); } catch {}
+    if (c.length) { riempiCommesse(c); toast("Sei offline: uso l'elenco salvato"); }
+    else { sel.innerHTML = '<option value="">Nessuna commessa</option>'; toast(e.message); }
+  }
+}
+function riempiCommesse(list){
+  const sel = $("#commessa"), last = store.get("commessa");
+  sel.innerHTML = list.length ? list.map(c => `<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join("") : '<option value="">Crea la prima commessa con + Nuova</option>';
+  if (list.some(c => c.id === last)) sel.value = last;
+  caricaVoci();
+}
+$("#commessa").addEventListener("change", e => { store.set("commessa", e.target.value); caricaVoci(); });
+
+$("#btnNuova").onclick = () => { $("#nuovaNome").value = ""; $("#dlgNuova").showModal(); };
+$("#nuovaAnn").onclick = () => $("#dlgNuova").close();
+$("#nuovaOk").onclick = async () => {
+  const nome = $("#nuovaNome").value.trim(); if (!nome) return;
+  $("#nuovaOk").disabled = true;
+  try { const j = await api("nuovaCommessa", {}, {nome}); store.set("commessa", j.id); $("#dlgNuova").close(); toast("Commessa creata"); await caricaCommesse(); }
+  catch (e) { toast(e.message); }
+  finally { $("#nuovaOk").disabled = false; }
+};
+
+/* ---------- categorie ---------- */
+let categoria = "Giornale lavori";
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  categoria = b.dataset.cat;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+  $("#scadBox").classList.toggle("show", categoria === "Scadenza");
+});
+
+/* ---------- dettatura ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, inAscolto = false, base = "";
+if (!SR) { $("#mic").disabled = true; $("#micHint").textContent = "Dettatura non disponibile qui: usa il microfono della tastiera."; }
+function avviaRec(){
+  rec = new SR(); rec.lang = "it-IT"; rec.continuous = true; rec.interimResults = true;
+  rec.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++){
+      const t = e.results[i][0].transcript.trim();
+      if (e.results[i].isFinal) base = (base ? base + " " : "") + t; else interim += " " + t;
+    }
+    $("#testo").value = base + interim;
+  };
+  rec.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed"){ inAscolto = false; aggiornaMic(); toast("Permesso microfono negato"); } };
+  rec.onend = () => { if (inAscolto) { try { rec.start(); } catch { inAscolto = false; aggiornaMic(); } } else aggiornaMic(); };
+  rec.start();
+}
+function aggiornaMic(){ $("#mic").classList.toggle("on", inAscolto); $("#micHint").textContent = inAscolto ? "In ascolto… premi di nuovo per fermare." : ""; }
+$("#mic").onclick = () => {
+  if (!SR) return;
+  if (inAscolto){ inAscolto = false; try { rec.stop(); } catch {} aggiornaMic(); return; }
+  base = $("#testo").value.trim(); inAscolto = true; aggiornaMic();
+  try { avviaRec(); } catch (e) { inAscolto = false; aggiornaMic(); toast("Impossibile avviare la dettatura"); }
+};
+
+/* ---------- allegati ---------- */
+let allegati = []; // {name, mime, data(base64), preview}
+function b64(blob){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob); }); }
+async function comprimi(file){
+  if (!file.type.startsWith("image/")) return {name:file.name || "allegato", mime:file.type || "application/octet-stream", data: await b64(file), preview:null};
+  try {
+    const img = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.82));
+    const data = await b64(blob);
+    return {name:(file.name || "foto").replace(/\.\w+$/, "") + ".jpg", mime:"image/jpeg", data, preview:"data:image/jpeg;base64,"+data};
+  } catch { const data = await b64(file); return {name:file.name || "foto", mime:file.type, data, preview:"data:"+file.type+";base64,"+data}; }
+}
+async function aggiungiFile(files){ for (const f of files) allegati.push(await comprimi(f)); disegnaThumbs(); }
+function disegnaThumbs(){
+  $("#thumbs").innerHTML = allegati.map((a, i) => `<div class="thumb">${a.preview ? `<img src="${a.preview}" alt="">` : esc(a.mime.startsWith("audio/") ? "🎧 audio" : "📎 " + a.name)}<button data-i="${i}" aria-label="Rimuovi">✕</button></div>`).join("");
+}
+$("#thumbs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; allegati.splice(+b.dataset.i, 1); disegnaThumbs(); });
+$("#fotoCam").onchange = e => { aggiungiFile(e.target.files); e.target.value = ""; };
+$("#fotoGal").onchange = e => { aggiungiFile(e.target.files); e.target.value = ""; };
+
+function posizione(){ return new Promise(res => {
+  if (!$("#gps").checked || !navigator.geolocation) return res(null);
+  navigator.geolocation.getCurrentPosition(p => res({lat:p.coords.latitude, lon:p.coords.longitude}), () => res(null), {enableHighAccuracy:true, timeout:8000, maximumAge:60000});
+});}
+$("#gps").onchange = e => store.set("gps", e.target.checked ? "1" : "");
+
+/* ---------- invio con coda offline ---------- */
+$("#invia").onclick = async () => {
+  const testo = $("#testo").value.trim(), commessa = $("#commessa").value;
+  if (!commessa) return toast("Scegli o crea una commessa");
+  if (!testo && !allegati.length) return toast("Detta o scrivi qualcosa, oppure allega una foto");
+  if (inAscolto){ inAscolto = false; try { rec.stop(); } catch {} aggiornaMic(); }
+  $("#invia").disabled = true;
+  const voce = {commessa, categoria, testo, scadenza: categoria === "Scadenza" ? $("#scadenza").value : "", autore: cfg.autore,
+    quando: new Date().toISOString(), pos: await posizione(), files: allegati.map(({name, mime, data}) => ({name, mime, data}))};
+  try { await api("voce", {}, voce); toast("Registrato ✓"); pulisci(); caricaVoci(); }
+  catch (e) {
+    if (e.message.includes("Codice") || e.message.includes("Configura")) { toast(e.message); }
+    else { await idbPut("coda", {voce}); pulisci(); toast("Nessuna connessione: salvato, lo invio appena torna la rete"); aggiornaCoda(); }
+  } finally { $("#invia").disabled = false; }
+};
+function pulisci(){ $("#testo").value = ""; base = ""; allegati = []; disegnaThumbs(); $("#scadenza").value = ""; }
+async function aggiornaCoda(){ const c = await idbAll("coda"); const q = $("#queue"); q.classList.toggle("show", c.length > 0); q.textContent = c.length ? `⏳ ${c.length} ${c.length === 1 ? "voce in attesa" : "voci in attesa"} di invio` : ""; }
+let svuotando = false;
+async function svuotaCoda(){
+  if (svuotando || !cfg.url) return; svuotando = true;
+  try { for (const item of await idbAll("coda")) { try { await api("voce", {}, item.voce); await idbDel("coda", item.qid); } catch { break; } } }
+  finally { svuotando = false; aggiornaCoda(); caricaVoci(); }
+}
+window.addEventListener("online", svuotaCoda);
+
+/* ---------- elenco voci ---------- */
+async function caricaVoci(){
+  const id = $("#commessa").value, L = $("#lista");
+  if (!id) { L.innerHTML = '<p class="empty">Nessuna commessa selezionata.</p>'; return; }
+  try {
+    const j = await api("voci", {commessa:id});
+    L.innerHTML = j.voci.length ? j.voci.map(v => `<div class="voce"><div class="meta"><span class="tag ${CAT_CLASS[v.categoria] || "c-nota"}">${esc(v.categoria)}</span><span>${esc(v.data)} ${esc(v.ora)}</span>${v.scadenza ? `<span>⏰ ${esc(v.scadenza)}</span>` : ""}${v.nfoto ? `<span>📷 ${v.nfoto}</span>` : ""}${v.stato ? `<span>${esc(v.stato)}</span>` : ""}</div><p>${esc(v.testo)}</p></div>`).join("") : '<p class="empty">Ancora nessuna voce in questa commessa.</p>';
+  } catch { L.innerHTML = '<p class="empty">Elenco non disponibile offline.</p>'; }
+}
+
+/* ---------- giornale ---------- */
+$("#dataGio").value = oggi();
+$("#btnGio").onclick = async () => {
+  const id = $("#commessa").value; if (!id) return toast("Scegli una commessa");
+  $("#btnGio").disabled = true; toast("Sto preparando il giornale…", 6000);
+  try { const j = await api("giornale", {commessa:id, data: $("#dataGio").value || oggi()}); toast("Giornale pronto"); window.open(j.url, "_blank"); }
+  catch (e) { toast(e.message); }
+  finally { $("#btnGio").disabled = false; }
+};
+
+/* ---------- impostazioni ---------- */
+function apriImp(){ $("#impUrl").value = cfg.url; $("#impTok").value = cfg.token; $("#impAut").value = cfg.autore; $("#dlgImp").showModal(); }
+$("#btnImp").onclick = apriImp;
+$("#impAnn").onclick = () => $("#dlgImp").close();
+$("#impOk").onclick = async () => {
+  store.set("url", $("#impUrl").value.trim()); store.set("token", $("#impTok").value.trim()); store.set("autore", $("#impAut").value.trim());
+  try { await api("ping"); $("#dlgImp").close(); toast("Collegato al motore ✓"); caricaCommesse(); svuotaCoda(); }
+  catch (e) { toast("Collegamento non riuscito: " + e.message, 5000); }
+};
+
+/* ---------- file condivisi da WhatsApp o altre app ---------- */
+async function riceviCondivisi(){
+  const params = new URLSearchParams(location.search);
+  if (!params.has("condiviso")) return;
+  history.replaceState(null, "", location.pathname);
+  const items = await idbAll("condivisi"); await idbClear("condivisi");
+  for (const it of items){
+    if (it.text) $("#testo").value = ($("#testo").value + " " + it.text).trim();
+    if (it.file) allegati.push(await comprimi(it.file));
+  }
+  disegnaThumbs();
+  if (items.length) toast("Contenuto ricevuto: scegli la categoria e premi Registra", 4000);
+}
+
+/* ---------- avvio ---------- */
+if (store.get("gps")) $("#gps").checked = true;
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+(async () => {
+  await riceviCondivisi();
+  await aggiornaCoda();
+  if (!cfg.url) apriImp(); else { await caricaCommesse(); svuotaCoda(); }
+})();
+</script>
+</body>
+</html>
