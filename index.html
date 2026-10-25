@@ -232,27 +232,40 @@ $("#chips").addEventListener("click", e => {
 
 /* ---------- dettatura ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, inAscolto = false, base = "";
+let rec = null, inAscolto = false, base = "", frase = "";
 if (!SR) { $("#mic").disabled = true; $("#micHint").textContent = "Dettatura non disponibile qui: usa il microfono della tastiera."; }
+/* Su Android Chrome il riconoscimento "continuo" restituisce risultati cumulativi
+   (ogni risultato ripete le parole precedenti). Per questo ascoltiamo una frase alla volta:
+   ogni sessione produce un solo testo, che SOSTITUISCE quello provvisorio invece di aggiungersi,
+   e a fine frase la sessione riparte da sola finché il microfono è acceso. */
+function mostraTesto(){ $("#testo").value = (base + (frase ? (base ? " " : "") + frase : "")); }
+function fissaFrase(){ if (frase) { base = (base ? base + " " : "") + frase; frase = ""; } }
 function avviaRec(){
-  rec = new SR(); rec.lang = "it-IT"; rec.continuous = true; rec.interimResults = true;
-  rec.onresult = e => {
-    let interim = "";
-    for (let i = e.resultIndex; i < e.results.length; i++){
-      const t = e.results[i][0].transcript.trim();
-      if (e.results[i].isFinal) base = (base ? base + " " : "") + t; else interim += " " + t;
-    }
-    $("#testo").value = base + interim;
+  const r = new SR(); rec = r;
+  r.lang = "it-IT"; r.continuous = false; r.interimResults = true; r.maxAlternatives = 1;
+  r.onresult = e => {
+    if (r !== rec) return;
+    // prende solo l'ultima trascrizione della sessione: è sempre la più completa
+    frase = e.results[e.results.length - 1][0].transcript.trim();
+    mostraTesto();
   };
-  rec.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed"){ inAscolto = false; aggiornaMic(); toast("Permesso microfono negato"); } };
-  rec.onend = () => { if (inAscolto) { try { rec.start(); } catch { inAscolto = false; aggiornaMic(); } } else aggiornaMic(); };
-  rec.start();
+  r.onerror = e => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed"){ inAscolto = false; aggiornaMic(); toast("Permesso microfono negato"); }
+  };
+  r.onend = () => {
+    if (r !== rec) return;
+    fissaFrase(); mostraTesto();
+    if (inAscolto) setTimeout(() => { if (inAscolto) { try { avviaRec(); } catch { inAscolto = false; aggiornaMic(); } } }, 120);
+    else aggiornaMic();
+  };
+  r.start();
 }
+function fermaRec(){ inAscolto = false; if (rec) { try { rec.stop(); } catch {} } fissaFrase(); mostraTesto(); aggiornaMic(); }
 function aggiornaMic(){ $("#mic").classList.toggle("on", inAscolto); $("#micHint").textContent = inAscolto ? "In ascolto… premi di nuovo per fermare." : ""; }
 $("#mic").onclick = () => {
   if (!SR) return;
-  if (inAscolto){ inAscolto = false; try { rec.stop(); } catch {} aggiornaMic(); return; }
-  base = $("#testo").value.trim(); inAscolto = true; aggiornaMic();
+  if (inAscolto){ fermaRec(); return; }
+  base = $("#testo").value.trim(); frase = ""; inAscolto = true; aggiornaMic();
   try { avviaRec(); } catch (e) { inAscolto = false; aggiornaMic(); toast("Impossibile avviare la dettatura"); }
 };
 
@@ -287,10 +300,10 @@ $("#gps").onchange = e => store.set("gps", e.target.checked ? "1" : "");
 
 /* ---------- invio con coda offline ---------- */
 $("#invia").onclick = async () => {
+  if (inAscolto) fermaRec();
   const testo = $("#testo").value.trim(), commessa = $("#commessa").value;
   if (!commessa) return toast("Scegli o crea una commessa");
   if (!testo && !allegati.length) return toast("Detta o scrivi qualcosa, oppure allega una foto");
-  if (inAscolto){ inAscolto = false; try { rec.stop(); } catch {} aggiornaMic(); }
   $("#invia").disabled = true;
   const voce = {commessa, categoria, testo, scadenza: categoria === "Scadenza" ? $("#scadenza").value : "", autore: cfg.autore,
     quando: new Date().toISOString(), pos: await posizione(), files: allegati.map(({name, mime, data}) => ({name, mime, data}))};
@@ -300,7 +313,7 @@ $("#invia").onclick = async () => {
     else { await idbPut("coda", {voce}); pulisci(); toast("Nessuna connessione: salvato, lo invio appena torna la rete"); aggiornaCoda(); }
   } finally { $("#invia").disabled = false; }
 };
-function pulisci(){ $("#testo").value = ""; base = ""; allegati = []; disegnaThumbs(); $("#scadenza").value = ""; }
+function pulisci(){ rec = null; $("#testo").value = ""; base = ""; frase = ""; allegati = []; disegnaThumbs(); $("#scadenza").value = ""; }
 async function aggiornaCoda(){ const c = await idbAll("coda"); const q = $("#queue"); q.classList.toggle("show", c.length > 0); q.textContent = c.length ? `⏳ ${c.length} ${c.length === 1 ? "voce in attesa" : "voci in attesa"} di invio` : ""; }
 let svuotando = false;
 async function svuotaCoda(){
